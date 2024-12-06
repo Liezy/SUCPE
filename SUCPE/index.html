@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Controle</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        /* Estilo para o campo de valor */
+        .currency {
+            text-align: right; /* Alinha o texto à direita */
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-r from-blue-500 to-indigo-600 min-h-screen flex items-center justify-center">
+    <div class="bg-white shadow-lg rounded-lg p-8 w-full max-w-lg">
+        <h2 class="text-2xl font-bold text-center text-gray-800">Painel de Controle</h2>
+        <form id="myForm" class="mt-4">
+            <div class="mb-4">
+                <label for="sgd" class="block text-gray-700">SGD</label>
+                <input type="text" class="mt-1 p-2 border rounded w-full" id="sgd" required placeholder="N° SGD">
+            </div>
+            <div class="mb-4">
+                <label for="nome" class="block text-gray-700">Nome do Processo</label>
+                <input type="text" class="mt-1 p-2 border rounded w-full" id="nome" required placeholder="Ex: Curso de Excel">
+            </div>
+            <div class="mb-4">
+                <label for="status" class="block text-gray-700">Status</label>
+                <select class="mt-1 p-2 border rounded w-full" id="status" required>
+                    <option value="" disabled selected>Selecione um status</option>
+                    <option value="Memorando">Memorando</option>
+                    <option value="Fase interna">Fase interna</option>
+                    <option value="Detalhamento">Detalhamento</option>
+                    <option value="Empenhado">Empenhado</option>
+                    <option value="Pago">Pago</option>
+                    <option value="Suspenso">Suspenso</option>
+                    <option value="Cancelado">Cancelado</option>
+                </select>
+            </div>
+            <div class="mb-4">
+                <label for="demandante" class="block text-gray-700">Demandante</label>
+                <input type="text" class="mt-1 p-2 border rounded w-full" id="demandante" required placeholder="Área solicitante">
+            </div>
+            <div class="mb-4">
+                <label for="valor" class="block text-gray-700">Valor Estimado</label>
+                <input type="text" class="mt-1 p-2 border rounded w-full currency" id="valor" required placeholder="R$ 0,00">
+            </div>
+            <div class="mb-4">
+                <label for="dataEvento" class="block text-gray-700">Data do Evento</label>
+                <input type="date" class="mt-1 p-2 border rounded w-full" id="dataEvento" required>
+            </div>
+            <div class="mb-4">
+                <label for="responsavel" class="block text-gray-700">Servidor Responsável</label>
+                <input type="text" class="mt-1 p-2 border rounded w-full" id="responsavel" required placeholder="Digite o nome do servidor">
+            </div>
+            <button type="submit" class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition">Cadastrar</button>
+        </form>
+        <div id="response" class="mt-3"></div>
+    </div>
+
+    <script>
+        // Função para formatar o valor para reais
+        function formatCurrency(value) {
+            value = value.replace(/\D/g, ''); // Remove tudo que não é dígito
+            value = (value / 100).toFixed(2); // Divide por 100 e garante duas casas decimais
+            value = value.replace('.', ','); // Troca o ponto pela vírgula
+
+            return 'R$ ' + value.replace(/\B(?=(\d{3})+(?!\d))/g, '.'); // Adiciona pontos a cada milhar
+        }
+
+        // Adiciona evento de input para formatar o campo de valor
+        document.getElementById("valor").addEventListener("input", function(event) {
+            this.value = formatCurrency(this.value);
+        });
+
+        document.getElementById("myForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            var sgd = document.getElementById("sgd").value;
+            var nome = document.getElementById("nome").value;
+            var status = document.getElementById("status").value;
+            var demandante = document.getElementById("demandante").value;
+            var valor = document.getElementById("valor").value.replace(/[R$\s.]/g, '').replace(',', '.'); // Remove a formatação
+            var dataEvento = document.getElementById("dataEvento").value;
+            var responsavel = document.getElementById("responsavel").value;
+
+            fetch("https://script.google.com/macros/s/AKfycbyv_KKynxwE_HR1-_wHsKgm6BWJFGzu93B7QkZS2n7HBXatEhmV8eJmssiNZBw4xDUE/exec", {
+                method: "POST",
+                mode: 'no-cors',
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    SGD: sgd,
+                    NOME: nome,
+                    STATUS: status,
+                    DEMANDANTE: demandante,
+                    VALOR: valor, // Envia o valor sem formatação
+                    DATA_EVENTO: dataEvento,
+                    RESPONSAVEL: responsavel
+                })
+            })
+            .then(response => {
+                // Exibe mensagem de confirmação sem checar resposta do servidor
+                document.getElementById("response").innerHTML = `<div class="p-3 bg-green-500 text-white rounded text-center">Dados cadastrados com sucesso!</div>`;
+                document.getElementById("myForm").reset(); // Limpa o formulário após o envio
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Exibe mensagem de erro caso ocorra
+                document.getElementById("response").innerHTML = `<div class="p-3 bg-red-500 text-white rounded text-center">Ocorreu um erro ao cadastrar os dados. Tente novamente.</div>`;
+            });
+        });
+    </script>
+</body>
+</html>
